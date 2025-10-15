@@ -19,7 +19,35 @@ import { useNetwork } from '../../context/NetworkContext';
 import { offlineStorage } from '../../utils/offlineStorage';
 import { APP_COLORS } from '../../constants/config';
 
-export default function LogCatchScreen() {
+// Error boundary component
+class LogCatchErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('LogCatchScreen error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={styles.container}>
+          <Text style={styles.errorText}>Something went wrong. Please try again.</Text>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+function LogCatchScreenContent() {
   const [species, setSpecies] = useState<FishSpecies[]>([]);
   const [speciesName, setSpeciesName] = useState<string>('');
   const [photo, setPhoto] = useState<string | null>(null);
@@ -271,10 +299,8 @@ export default function LogCatchScreen() {
     );
   };
 
-  // Error boundary for the component
-  try {
-    return (
-      <ScrollView style={styles.container}>
+  return (
+    <ScrollView style={styles.container}>
       {/* Offline Status Indicator */}
       {!isOnline && (
         <View style={styles.offlineBanner}>
@@ -439,14 +465,14 @@ export default function LogCatchScreen() {
       </TouchableOpacity>
     </ScrollView>
   );
-  } catch (error) {
-    console.error('LogCatchScreen error:', error);
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Something went wrong. Please try again.</Text>
-      </View>
-    );
-  }
+}
+
+export default function LogCatchScreen() {
+  return (
+    <LogCatchErrorBoundary>
+      <LogCatchScreenContent />
+    </LogCatchErrorBoundary>
+  );
 }
 
 const styles = StyleSheet.create({
