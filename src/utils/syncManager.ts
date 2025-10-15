@@ -32,24 +32,24 @@ class SyncManager {
     try {
       const pendingCatches = await offlineStorage.getPendingCatches();
       
-      for (const catchData of pendingCatches) {
+      for (const catchItem of pendingCatches) {
         try {
           // Convert offline catch to database format
           const dbCatch = {
-            species: catchData.species,
-            weight: catchData.weight,
-            length: catchData.length,
-            latitude: catchData.location.latitude,
-            longitude: catchData.location.longitude,
-            caught_at: catchData.timestamp,
-            weather_temperature: catchData.weather?.temperature,
-            weather_pressure: catchData.weather?.pressure,
-            weather_wind_speed: catchData.weather?.windSpeed,
-            weather_conditions: catchData.weather?.conditions,
-            bait_used: catchData.bait,
-            technique: catchData.technique,
-            notes: catchData.notes,
-            photos: catchData.photos || [],
+            species: catchItem.species,
+            weight: catchItem.weight,
+            length: catchItem.length,
+            latitude: catchItem.location.latitude,
+            longitude: catchItem.location.longitude,
+            caught_at: catchItem.timestamp,
+            weather_temperature: catchItem.weather?.temperature,
+            weather_pressure: catchItem.weather?.pressure,
+            weather_wind_speed: catchItem.weather?.windSpeed,
+            weather_conditions: catchItem.weather?.conditions,
+            bait_used: catchItem.bait,
+            technique: catchItem.technique,
+            notes: catchItem.notes,
+            photos: catchItem.photos || [],
           };
 
           // Insert into database
@@ -62,13 +62,13 @@ class SyncManager {
           }
 
           // Mark as synced
-          await offlineStorage.markCatchAsSynced(catchData.id);
+          await offlineStorage.markCatchAsSynced(catchItem.id);
           result.syncedCount++;
           
         } catch (error) {
-          console.error('Failed to sync catch:', catchData.id, error);
+          console.error('Failed to sync catch:', catchItem.id, error);
           result.failedCount++;
-          result.errors.push(`Catch ${catchData.id}: ${error.message}`);
+          result.errors.push(`Catch ${catchItem.id}: ${error.message}`);
         }
       }
 

@@ -100,13 +100,13 @@ class OfflineStorage {
 
   async getPendingCatches(): Promise<OfflineCatch[]> {
     const catches = await this.getOfflineCatches();
-    return catches.filter(catch => !catch.synced);
+    return catches.filter(catchItem => !catchItem.synced);
   }
 
   async markCatchAsSynced(id: string): Promise<void> {
     const catches = await this.getOfflineCatches();
-    const updatedCatches = catches.map(catch => 
-      catch.id === id ? { ...catch, synced: true } : catch
+    const updatedCatches = catches.map(catchItem => 
+      catchItem.id === id ? { ...catchItem, synced: true } : catchItem
     );
     
     await FileSystem.writeAsStringAsync(
@@ -117,7 +117,7 @@ class OfflineStorage {
 
   async removeSyncedCatches(): Promise<void> {
     const catches = await this.getOfflineCatches();
-    const pendingCatches = catches.filter(catch => !catch.synced);
+    const pendingCatches = catches.filter(catchItem => !catchItem.synced);
     
     await FileSystem.writeAsStringAsync(
       this.catchesFile,
