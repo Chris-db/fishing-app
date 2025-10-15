@@ -21,6 +21,7 @@ export default function LogCatchScreenSimple() {
   const [baitUsed, setBaitUsed] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [formKey, setFormKey] = useState(0); // Key to force re-render
 
   const handleSubmit = async () => {
     if (!speciesName.trim()) {
@@ -61,18 +62,23 @@ export default function LogCatchScreenSimple() {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Create notification for the catch
-      notificationService.createCatchNotification(
-        newCatch.species,
-        newCatch.weight,
-        newCatch.length
-      );
-
-      // Check for achievements
-      notificationService.checkAchievements(existingCatches.concat(newCatch));
-      
-      // Clear the form immediately after successful logging
+      // Clear the form immediately after successful logging (before notifications)
       resetForm();
+      
+      // Create notification for the catch (non-blocking)
+      try {
+        notificationService.createCatchNotification(
+          newCatch.species,
+          newCatch.weight,
+          newCatch.length
+        );
+
+        // Check for achievements
+        notificationService.checkAchievements(existingCatches.concat(newCatch));
+      } catch (notificationError) {
+        console.log('Notification error (non-critical):', notificationError);
+        // Don't fail the catch logging if notifications fail
+      }
       
       // Show simple success alert with navigation options
       Alert.alert(
@@ -110,12 +116,13 @@ export default function LogCatchScreenSimple() {
   };
 
   const resetForm = () => {
+    console.log('Resetting form...');
     setSpeciesName('');
     setWeight('');
     setLength('');
     setBaitUsed('');
     setNotes('');
-    // Optional: Add a brief visual feedback that form was cleared
+    setFormKey(prev => prev + 1); // Force re-render of form inputs
     console.log('Form cleared successfully');
   };
 
@@ -130,6 +137,7 @@ export default function LogCatchScreenSimple() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Fish Species *</Text>
         <TextInput
+          key={`species-${formKey}`}
           style={styles.textInput}
           placeholder="Enter fish species (e.g., Bass, Trout, Salmon)"
           value={speciesName}
@@ -145,6 +153,7 @@ export default function LogCatchScreenSimple() {
           <View style={styles.measurementInput}>
             <Text style={styles.inputLabel}>Weight (lbs)</Text>
             <TextInput
+              key={`weight-${formKey}`}
               style={styles.textInput}
               placeholder="0.0"
               value={weight}
@@ -155,6 +164,7 @@ export default function LogCatchScreenSimple() {
           <View style={styles.measurementInput}>
             <Text style={styles.inputLabel}>Length (inches)</Text>
             <TextInput
+              key={`length-${formKey}`}
               style={styles.textInput}
               placeholder="0.0"
               value={length}
@@ -169,6 +179,7 @@ export default function LogCatchScreenSimple() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Bait Used</Text>
         <TextInput
+          key={`bait-${formKey}`}
           style={styles.textInput}
           placeholder="What bait or lure did you use?"
           value={baitUsed}
@@ -180,6 +191,7 @@ export default function LogCatchScreenSimple() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Notes</Text>
         <TextInput
+          key={`notes-${formKey}`}
           style={[styles.textInput, styles.notesInput]}
           placeholder="Any additional notes about your catch..."
           value={notes}
