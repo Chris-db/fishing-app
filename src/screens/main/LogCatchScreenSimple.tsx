@@ -71,6 +71,9 @@ export default function LogCatchScreenSimple() {
       // Check for achievements
       notificationService.checkAchievements(existingCatches.concat(newCatch));
       
+      // Clear the form immediately after successful logging
+      resetForm();
+      
       // Show simple success alert with navigation options
       Alert.alert(
         '🎣 Catch Logged!', 
@@ -78,13 +81,14 @@ export default function LogCatchScreenSimple() {
         [
           { 
             text: 'Log Another', 
-            onPress: () => resetForm(),
+            onPress: () => {
+              // Form is already cleared, just stay on the page
+            },
             style: 'default'
           },
           { 
             text: 'View Trophy Room', 
             onPress: () => {
-              resetForm();
               navigation.navigate('TrophyRoom' as never);
             },
             style: 'default'
@@ -92,7 +96,6 @@ export default function LogCatchScreenSimple() {
           { 
             text: 'View Notifications', 
             onPress: () => {
-              resetForm();
               navigation.navigate('Notifications' as never);
             },
             style: 'default'
@@ -112,6 +115,8 @@ export default function LogCatchScreenSimple() {
     setLength('');
     setBaitUsed('');
     setNotes('');
+    // Optional: Add a brief visual feedback that form was cleared
+    console.log('Form cleared successfully');
   };
 
   return (
