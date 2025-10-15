@@ -16,6 +16,7 @@ import WeatherScreen from '../screens/main/WeatherScreen';
 import TrophyRoomScreenNew from '../screens/main/TrophyRoomScreenNew';
 import SocialScreen from '../screens/main/SocialScreen';
 import LogCatchScreenSimple from '../screens/main/LogCatchScreenSimple';
+import NotificationsScreen from '../screens/main/NotificationsScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
 import AnalyticsScreen from '../screens/main/AnalyticsScreen';
@@ -88,6 +89,9 @@ function MainNavigator() {
             case 'LogCatch':
               iconName = focused ? 'add-circle' : 'add-circle-outline';
               break;
+            case 'Notifications':
+              iconName = focused ? 'notifications' : 'notifications-outline';
+              break;
             case 'Analytics':
               iconName = focused ? 'analytics' : 'analytics-outline';
               break;
@@ -142,6 +146,11 @@ function MainNavigator() {
         name="LogCatch" 
         component={LogCatchScreenSimple} 
         options={{ title: 'Log Catch' }}
+      />
+      <Tab.Screen 
+        name="Notifications" 
+        component={NotificationsScreen} 
+        options={{ title: 'Notifications' }}
       />
       <Tab.Screen 
         name="Analytics" 

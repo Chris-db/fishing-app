@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { WeatherService, WeatherData, SolunarData, TideData } from '../../services/weatherService';
+import { notificationService } from '../../services/notificationService';
 import { useUnits } from '../../context/UnitsContext';
 import { APP_COLORS } from '../../constants/config';
 
@@ -55,6 +56,9 @@ export default function WeatherScreen() {
       setForecast(forecastData);
       setSolunar(solunarData);
       setTide(tideData);
+
+      // Generate weather alerts
+      notificationService.generateWeatherAlerts(currentWeather);
 
     } catch (error) {
       console.error('Error fetching weather data:', error);
