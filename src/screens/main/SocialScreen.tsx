@@ -31,12 +31,20 @@ export default function SocialScreen() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [socialStats, setSocialStats] = useState<SocialStats | null>(null);
+  
+  // Filter states
+  const [showFilters, setShowFilters] = useState(false);
+  const [distanceFilter, setDistanceFilter] = useState<number>(50); // miles
+  const [speciesFilter, setSpeciesFilter] = useState<string>('all');
+  const [waterTypeFilter, setWaterTypeFilter] = useState<string>('all');
+  const [dateRangeFilter, setDateRangeFilter] = useState<number>(7); // days
+  const [nearbyOnly, setNearbyOnly] = useState(true);
   const { user } = useAuth();
   const { getUnitLabel, convertWeightFromDb, convertLengthFromDb } = useUnits();
 
   useEffect(() => {
     loadFeed();
-  }, [selectedTab]);
+  }, [selectedTab, distanceFilter, speciesFilter, waterTypeFilter, dateRangeFilter, nearbyOnly]);
 
   const loadFeed = async () => {
     try {
@@ -62,7 +70,40 @@ export default function SocialScreen() {
           return;
       }
 
-      setFeedItems(feedData);
+      // Apply filters
+      let filteredData = feedData;
+
+      // Distance filter
+      if (nearbyOnly && distanceFilter < 1000) {
+        // Filter by distance (simplified - in production, use proper geospatial queries)
+        filteredData = filteredData.filter(item => {
+          // This is a placeholder - implement proper distance calculation
+          return true; // For now, return all items
+        });
+      }
+
+      // Species filter
+      if (speciesFilter !== 'all') {
+        filteredData = filteredData.filter(item => 
+          item.content.species?.toLowerCase().includes(speciesFilter.toLowerCase())
+        );
+      }
+
+      // Water type filter
+      if (waterTypeFilter !== 'all') {
+        filteredData = filteredData.filter(item => 
+          item.content.location?.toLowerCase().includes(waterTypeFilter.toLowerCase())
+        );
+      }
+
+      // Date range filter
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - dateRangeFilter);
+      filteredData = filteredData.filter(item => 
+        new Date(item.content.date) >= cutoffDate
+      );
+
+      setFeedItems(filteredData);
 
       // Load social stats
       const stats = await SocialService.getSocialStats(user.id);
@@ -262,6 +303,109 @@ export default function SocialScreen() {
           ]}>Search</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Filter Bar */}
+      <View style={styles.filterContainer}>
+        <TouchableOpacity 
+          style={styles.filterButton}
+          onPress={() => setShowFilters(!showFilters)}
+        >
+          <Ionicons name="filter" size={20} color={APP_COLORS.primary} />
+          <Text style={styles.filterText}>Filters</Text>
+          <Ionicons 
+            name={showFilters ? "chevron-up" : "chevron-down"} 
+            size={16} 
+            color={APP_COLORS.primary} 
+          />
+        </TouchableOpacity>
+        
+        {nearbyOnly && (
+          <View style={styles.activeFilterBadge}>
+            <Text style={styles.activeFilterText}>Nearby Only</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Filter Options */}
+      {showFilters && (
+        <View style={styles.filterOptions}>
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Distance (miles)</Text>
+            <View style={styles.distanceButtons}>
+              {[5, 10, 25, 50, 100].map(distance => (
+                <TouchableOpacity
+                  key={distance}
+                  style={[
+                    styles.distanceButton,
+                    distanceFilter === distance && styles.distanceButtonActive
+                  ]}
+                  onPress={() => setDistanceFilter(distance)}
+                >
+                  <Text style={[
+                    styles.distanceButtonText,
+                    distanceFilter === distance && styles.distanceButtonTextActive
+                  ]}>{distance}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Species</Text>
+            <TouchableOpacity style={styles.speciesSelector}>
+              <Text style={styles.speciesText}>
+                {speciesFilter === 'all' ? 'All Species' : speciesFilter}
+              </Text>
+              <Ionicons name="chevron-down" size={16} color={APP_COLORS.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Water Type</Text>
+            <TouchableOpacity style={styles.waterTypeSelector}>
+              <Text style={styles.waterTypeText}>
+                {waterTypeFilter === 'all' ? 'All Water Types' : waterTypeFilter}
+              </Text>
+              <Ionicons name="chevron-down" size={16} color={APP_COLORS.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Date Range</Text>
+            <View style={styles.dateRangeButtons}>
+              {[1, 3, 7, 14, 30].map(days => (
+                <TouchableOpacity
+                  key={days}
+                  style={[
+                    styles.dateRangeButton,
+                    dateRangeFilter === days && styles.dateRangeButtonActive
+                  ]}
+                  onPress={() => setDateRangeFilter(days)}
+                >
+                  <Text style={[
+                    styles.dateRangeButtonText,
+                    dateRangeFilter === days && styles.dateRangeButtonTextActive
+                  ]}>{days}d</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.filterRow}>
+            <TouchableOpacity 
+              style={styles.toggleRow}
+              onPress={() => setNearbyOnly(!nearbyOnly)}
+            >
+              <Ionicons 
+                name={nearbyOnly ? "checkbox" : "checkbox-outline"} 
+                size={20} 
+                color={nearbyOnly ? APP_COLORS.primary : APP_COLORS.textSecondary} 
+              />
+              <Text style={styles.toggleText}>Nearby only (within {distanceFilter} miles)</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {/* Search Tab */}
       {selectedTab === 'search' && (
@@ -523,6 +667,142 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: APP_COLORS.textSecondary,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: APP_COLORS.surface,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 8,
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  filterText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: APP_COLORS.primary,
+    marginLeft: 8,
+    marginRight: 4,
+  },
+  activeFilterBadge: {
+    backgroundColor: APP_COLORS.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  activeFilterText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  filterOptions: {
+    backgroundColor: APP_COLORS.surface,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 8,
+    padding: 16,
+  },
+  filterRow: {
+    marginBottom: 16,
+  },
+  filterLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: APP_COLORS.text,
+    marginBottom: 8,
+  },
+  distanceButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  distanceButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
+    backgroundColor: 'transparent',
+  },
+  distanceButtonActive: {
+    backgroundColor: APP_COLORS.primary,
+    borderColor: APP_COLORS.primary,
+  },
+  distanceButtonText: {
+    fontSize: 14,
+    color: APP_COLORS.text,
+  },
+  distanceButtonTextActive: {
+    color: 'white',
+  },
+  speciesSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
+    borderRadius: 8,
+    backgroundColor: APP_COLORS.background,
+  },
+  speciesText: {
+    fontSize: 16,
+    color: APP_COLORS.text,
+  },
+  waterTypeSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
+    borderRadius: 8,
+    backgroundColor: APP_COLORS.background,
+  },
+  waterTypeText: {
+    fontSize: 16,
+    color: APP_COLORS.text,
+  },
+  dateRangeButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  dateRangeButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
+    backgroundColor: 'transparent',
+  },
+  dateRangeButtonActive: {
+    backgroundColor: APP_COLORS.primary,
+    borderColor: APP_COLORS.primary,
+  },
+  dateRangeButtonText: {
+    fontSize: 14,
+    color: APP_COLORS.text,
+  },
+  dateRangeButtonTextActive: {
+    color: 'white',
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  toggleText: {
+    fontSize: 16,
+    color: APP_COLORS.text,
+    marginLeft: 8,
   },
   tabContainer: {
     flexDirection: 'row',

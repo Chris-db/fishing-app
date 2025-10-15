@@ -14,6 +14,11 @@ import { APP_COLORS } from '../../constants/config';
 export default function SettingsScreen() {
   const { units, updateUnits, getUnitLabel } = useUnits();
   const [showDropdown, setShowDropdown] = useState<string | null>(null);
+  
+  // Privacy settings
+  const [locationPrecision, setLocationPrecision] = useState<'exact' | 'approximate' | 'general' | 'none'>('approximate');
+  const [protectSpots, setProtectSpots] = useState(true);
+  const [shareWithFriends, setShareWithFriends] = useState(true);
 
   const handleUnitChange = async (unitType: keyof UnitPreferences, value: any) => {
     try {
@@ -179,6 +184,113 @@ export default function SettingsScreen() {
         )}
       </View>
 
+      {/* Privacy Settings */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Privacy & Location</Text>
+        
+        <View style={styles.settingItem}>
+          <View style={styles.settingInfo}>
+            <Text style={styles.settingTitle}>Location Precision</Text>
+            <Text style={styles.settingSubtitle}>
+              {locationPrecision === 'exact' ? 'Exact location (friends only)' :
+               locationPrecision === 'approximate' ? 'Approximate (1-5 mile radius)' :
+               locationPrecision === 'general' ? 'General area (city/region only)' :
+               'No location shared'}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.dropdownButton}
+            onPress={() => setShowDropdown(showDropdown === 'locationPrecision' ? null : 'locationPrecision')}
+          >
+            <Text style={styles.dropdownText}>
+              {locationPrecision === 'exact' ? 'Exact' :
+               locationPrecision === 'approximate' ? 'Approximate' :
+               locationPrecision === 'general' ? 'General' : 'None'}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={APP_COLORS.textSecondary} />
+          </TouchableOpacity>
+        </View>
+
+        {showDropdown === 'locationPrecision' && (
+          <View style={styles.dropdownOptions}>
+            <TouchableOpacity
+              style={styles.dropdownOption}
+              onPress={() => {
+                setLocationPrecision('exact');
+                setShowDropdown(null);
+              }}
+            >
+              <Text style={styles.dropdownOptionText}>Exact location (friends only)</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.dropdownOption}
+              onPress={() => {
+                setLocationPrecision('approximate');
+                setShowDropdown(null);
+              }}
+            >
+              <Text style={styles.dropdownOptionText}>Approximate (1-5 mile radius)</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.dropdownOption}
+              onPress={() => {
+                setLocationPrecision('general');
+                setShowDropdown(null);
+              }}
+            >
+              <Text style={styles.dropdownOptionText}>General area (city/region only)</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.dropdownOption}
+              onPress={() => {
+                setLocationPrecision('none');
+                setShowDropdown(null);
+              }}
+            >
+              <Text style={styles.dropdownOptionText}>No location</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <View style={styles.settingItem}>
+          <View style={styles.settingInfo}>
+            <Text style={styles.settingTitle}>Protect Fishing Spots</Text>
+            <Text style={styles.settingSubtitle}>
+              Show general area only (5-10 mile radius) for all catches
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.toggleButton}
+            onPress={() => setProtectSpots(!protectSpots)}
+          >
+            <Ionicons 
+              name={protectSpots ? "shield" : "shield-outline"} 
+              size={20} 
+              color={protectSpots ? APP_COLORS.primary : APP_COLORS.textSecondary} 
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.settingItem}>
+          <View style={styles.settingInfo}>
+            <Text style={styles.settingTitle}>Share with Friends</Text>
+            <Text style={styles.settingSubtitle}>
+              Allow friends to see exact locations
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.toggleButton}
+            onPress={() => setShareWithFriends(!shareWithFriends)}
+          >
+            <Ionicons 
+              name={shareWithFriends ? "people" : "people-outline"} 
+              size={20} 
+              color={shareWithFriends ? APP_COLORS.primary : APP_COLORS.textSecondary} 
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <View style={styles.infoCard}>
         <Ionicons name="information-circle" size={24} color={APP_COLORS.primary} />
         <View style={styles.infoContent}>
@@ -186,6 +298,17 @@ export default function SettingsScreen() {
           <Text style={styles.infoText}>
             These settings will apply to all measurements throughout the app, including 
             catch logging, weather data, and statistics. Changes are saved automatically.
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.infoCard}>
+        <Ionicons name="shield-checkmark" size={24} color={APP_COLORS.primary} />
+        <View style={styles.infoContent}>
+          <Text style={styles.infoTitle}>Privacy Protection</Text>
+          <Text style={styles.infoText}>
+            Your privacy settings help protect your favorite fishing spots while still 
+            allowing you to share helpful information with the community.
           </Text>
         </View>
       </View>

@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { supabase, User } from '../../services/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { useUnits } from '../../context/UnitsContext';
+import { usePremium } from '../../context/PremiumContext';
 import { APP_COLORS } from '../../constants/config';
 
 interface UserStats {
@@ -32,6 +33,7 @@ export default function ProfileScreen() {
   const { user, signOut, updateProfile } = useAuth();
   const navigation = useNavigation();
   const { getUnitLabel, convertWeightFromDb, convertLengthFromDb } = useUnits();
+  const { isPremium } = usePremium();
 
   useEffect(() => {
     loadUserStats();
@@ -261,6 +263,21 @@ export default function ProfileScreen() {
           >
             <Ionicons name="settings" size={24} color={APP_COLORS.primary} />
             <Text style={styles.settingText}>Units & Measurements</Text>
+            <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => navigation.navigate('Premium' as never)}
+          >
+            <Ionicons 
+              name={isPremium ? "star" : "star-outline"} 
+              size={24} 
+              color={isPremium ? APP_COLORS.warning : APP_COLORS.primary} 
+            />
+            <Text style={styles.settingText}>
+              {isPremium ? 'Premium (Active)' : 'Upgrade to Premium'}
+            </Text>
             <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
           </TouchableOpacity>
           

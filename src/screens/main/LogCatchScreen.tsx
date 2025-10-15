@@ -15,6 +15,8 @@ import * as Location from 'expo-location';
 import { supabase, FishSpecies, Catch } from '../../services/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { useUnits } from '../../context/UnitsContext';
+import { useNetwork } from '../../context/NetworkContext';
+import { offlineStorage } from '../../utils/offlineStorage';
 import { APP_COLORS } from '../../constants/config';
 
 export default function LogCatchScreen() {
@@ -32,6 +34,7 @@ export default function LogCatchScreen() {
   const [showSpeciesPicker, setShowSpeciesPicker] = useState(false);
   const { user } = useAuth();
   const { getUnitLabel, convertWeight, convertLength } = useUnits();
+  const { isOnline, pendingSyncCount } = useNetwork();
 
   useEffect(() => {
     loadSpecies();
@@ -153,11 +156,6 @@ export default function LogCatchScreen() {
 
     setLoading(true);
     try {
-      let photoUrl = null;
-      if (photo) {
-        photoUrl = await uploadPhoto(photo);
-      }
-
       // Convert user input to database units (lbs and inches)
       const weightValue = weight ? parseFloat(weight) : null;
       const lengthValue = length ? parseFloat(length) : null;
@@ -166,30 +164,72 @@ export default function LogCatchScreen() {
       const dbWeight = weightValue ? convertWeight(weightValue, 'weight') : null;
       const dbLength = lengthValue ? convertLength(lengthValue, 'length') : null;
 
-      const catchData = {
-        user_id: user.id,
-        species_id: selectedSpecies.id,
-        photo_url: photoUrl,
-        weight: dbWeight,
-        length: dbLength,
-        bait_used: baitUsed || null,
-        location: location || null,
-        coordinates: coordinates ? `POINT(${coordinates.lng} ${coordinates.lat})` : null,
-        time: new Date().toTimeString().split(' ')[0],
-        date: new Date().toISOString().split('T')[0],
-        privacy,
-        notes: notes || null,
-      };
+      let photoUrls: string[] = [];
+      if (photo) {
+        if (isOnline) {
+          // Upload photo to server when online
+          const photoUrl = await uploadPhoto(photo);
+          if (photoUrl) photoUrls.push(photoUrl);
+        } else {
+          // Save photo locally when offline
+          const offlinePhotoPath = await offlineStorage.saveOfflinePhoto(photo, `catch_${Date.now()}`);
+          photoUrls.push(offlinePhotoPath);
+        }
+      }
 
-      const { error } = await supabase
-        .from('catches')
-        .insert(catchData);
+      if (isOnline) {
+        // Online: Save directly to database
+        const catchData = {
+          user_id: user.id,
+          species_id: selectedSpecies.id,
+          photo_url: photoUrls[0] || null,
+          weight: dbWeight,
+          length: dbLength,
+          bait_used: baitUsed || null,
+          location: location || null,
+          coordinates: coordinates ? `POINT(${coordinates.lng} ${coordinates.lat})` : null,
+          time: new Date().toTimeString().split(' ')[0],
+          date: new Date().toISOString().split('T')[0],
+          privacy,
+          notes: notes || null,
+        };
 
-      if (error) throw error;
+        const { error } = await supabase
+          .from('catches')
+          .insert(catchData);
 
-      Alert.alert('Success', 'Catch logged successfully!', [
-        { text: 'OK', onPress: () => resetForm() }
-      ]);
+        if (error) throw error;
+
+        Alert.alert('Success', 'Catch logged successfully!', [
+          { text: 'OK', onPress: () => resetForm() }
+        ]);
+      } else {
+        // Offline: Save to local storage
+        const offlineCatch = {
+          species: selectedSpecies.name,
+          weight: dbWeight || 0,
+          length: dbLength || 0,
+          location: {
+            latitude: coordinates?.lat || 0,
+            longitude: coordinates?.lng || 0,
+            accuracy: 0,
+          },
+          timestamp: new Date().toISOString(),
+          weather: undefined, // Could be enhanced to capture current weather
+          bait: baitUsed || undefined,
+          technique: undefined,
+          notes: notes || undefined,
+          photos: photoUrls,
+        };
+
+        await offlineStorage.saveCatch(offlineCatch);
+
+        Alert.alert(
+          'Catch Saved Offline', 
+          'Your catch has been saved locally and will sync when you\'re back online.',
+          [{ text: 'OK', onPress: () => resetForm() }]
+        );
+      }
 
     } catch (error) {
       console.error('Error logging catch:', error);
@@ -223,6 +263,26 @@ export default function LogCatchScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      {/* Offline Status Indicator */}
+      {!isOnline && (
+        <View style={styles.offlineBanner}>
+          <Ionicons name="cloud-offline" size={20} color="#fff" />
+          <Text style={styles.offlineText}>
+            Offline Mode - Catches will sync when online
+          </Text>
+        </View>
+      )}
+      
+      {/* Pending Sync Indicator */}
+      {pendingSyncCount > 0 && (
+        <View style={styles.syncBanner}>
+          <Ionicons name="sync" size={20} color="#fff" />
+          <Text style={styles.syncText}>
+            {pendingSyncCount} catch{pendingSyncCount > 1 ? 'es' : ''} pending sync
+          </Text>
+        </View>
+      )}
+
       {/* Species Selection */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Fish Species *</Text>
@@ -402,6 +462,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: APP_COLORS.background,
+  },
+  offlineBanner: {
+    backgroundColor: '#FF6B35',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    margin: 16,
+    borderRadius: 8,
+  },
+  offlineText: {
+    color: '#fff',
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  syncBanner: {
+    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    margin: 16,
+    marginTop: 0,
+    borderRadius: 8,
+  },
+  syncText: {
+    color: '#fff',
+    marginLeft: 8,
+    fontWeight: '500',
   },
   section: {
     backgroundColor: APP_COLORS.surface,

@@ -1,4 +1,5 @@
 import { WEATHER_API_KEY, SOLUNAR_API_KEY } from '../constants/config';
+import { offlineStorage } from '../utils/offlineStorage';
 
 export interface WeatherData {
   temperature: number;
@@ -74,12 +75,19 @@ export interface FishingConditions {
 export class WeatherService {
   static async getCurrentWeather(lat: number, lng: number): Promise<WeatherData> {
     try {
+      // Check for cached weather data first
+      const cachedWeather = await offlineStorage.getCachedWeather({ latitude: lat, longitude: lng });
+      if (cachedWeather) {
+        console.log('Using cached weather data');
+        return cachedWeather;
+      }
+
       const response = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${WEATHER_API_KEY}&units=metric`
       );
       const data = await response.json();
       
-      return {
+      const weatherData = {
         temperature: data.main.temp,
         pressure: data.main.pressure,
         humidity: data.main.humidity,
@@ -93,8 +101,21 @@ export class WeatherService {
         dewPoint: data.main.dew_point,
         feelsLike: data.main.feels_like,
       };
+
+      // Cache the weather data
+      await offlineStorage.cacheWeatherData(weatherData, { latitude: lat, longitude: lng });
+      
+      return weatherData;
     } catch (error) {
       console.error('Error fetching weather:', error);
+      
+      // Try to return cached data as fallback
+      const cachedWeather = await offlineStorage.getCachedWeather({ latitude: lat, longitude: lng });
+      if (cachedWeather) {
+        console.log('Using cached weather data as fallback');
+        return cachedWeather;
+      }
+      
       throw error;
     }
   }

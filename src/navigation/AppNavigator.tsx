@@ -18,6 +18,8 @@ import SocialScreen from '../screens/main/SocialScreen';
 import LogCatchScreen from '../screens/main/LogCatchScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
+import AnalyticsScreen from '../screens/main/AnalyticsScreen';
+import PremiumScreen from '../screens/main/PremiumScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -54,6 +56,11 @@ function ProfileStackNavigator() {
         component={SettingsScreen} 
         options={{ title: 'Settings' }}
       />
+      <Stack.Screen 
+        name="Premium" 
+        component={PremiumScreen} 
+        options={{ title: 'Premium' }}
+      />
     </Stack.Navigator>
   );
 }
@@ -80,6 +87,9 @@ function MainNavigator() {
               break;
             case 'LogCatch':
               iconName = focused ? 'add-circle' : 'add-circle-outline';
+              break;
+            case 'Analytics':
+              iconName = focused ? 'analytics' : 'analytics-outline';
               break;
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
@@ -132,6 +142,11 @@ function MainNavigator() {
         name="LogCatch" 
         component={LogCatchScreen} 
         options={{ title: 'Log Catch' }}
+      />
+      <Tab.Screen 
+        name="Analytics" 
+        component={AnalyticsScreen} 
+        options={{ title: 'Analytics' }}
       />
       <Tab.Screen 
         name="Profile" 
