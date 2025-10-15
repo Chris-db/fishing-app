@@ -27,7 +27,35 @@ export default function LogCatchScreenSimple() {
 
     setLoading(true);
     try {
-      // Simulate API call
+      // Create catch object
+      const newCatch = {
+        id: Date.now().toString(),
+        species: speciesName.trim(),
+        weight: weight.trim() || undefined,
+        length: length.trim() || undefined,
+        bait: baitUsed.trim() || undefined,
+        notes: notes.trim() || undefined,
+        timestamp: new Date().toISOString(),
+      };
+
+      // Load existing catches
+      let existingCatches = [];
+      try {
+        const stored = localStorage.getItem('fishtimes_catches');
+        if (stored) {
+          existingCatches = JSON.parse(stored);
+        }
+      } catch (error) {
+        console.log('No existing catches found');
+      }
+
+      // Add new catch
+      existingCatches.unshift(newCatch); // Add to beginning of array
+      
+      // Save back to localStorage
+      localStorage.setItem('fishtimes_catches', JSON.stringify(existingCatches));
+      
+      // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       Alert.alert('Success', 'Catch logged successfully!', [
