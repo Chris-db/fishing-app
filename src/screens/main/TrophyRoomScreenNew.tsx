@@ -12,6 +12,7 @@ import {
   FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { APP_COLORS } from '../../constants/config';
 
 interface LoggedCatch {
@@ -54,6 +55,13 @@ export default function TrophyRoomScreenNew() {
     loadCatches();
   }, []);
 
+  // Auto-refresh when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadCatches();
+    }, [])
+  );
+
   const loadCatches = () => {
     try {
       const stored = localStorage.getItem('fishtimes_catches');
@@ -73,6 +81,11 @@ export default function TrophyRoomScreenNew() {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadCatches();
   };
 
   const calculateSpeciesStats = (catches: LoggedCatch[]) => {
@@ -288,15 +301,31 @@ export default function TrophyRoomScreenNew() {
     <View style={styles.container}>
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={loadCatches} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>🏆 Trophy Room</Text>
-          <Text style={styles.headerSubtitle}>
-            {loggedCatches.length} catch{loggedCatches.length !== 1 ? 'es' : ''} • {speciesStats.length} species
-          </Text>
+          <View style={styles.headerTop}>
+            <View style={styles.headerContent}>
+              <Text style={styles.headerTitle}>🏆 Trophy Room</Text>
+              <Text style={styles.headerSubtitle}>
+                {loggedCatches.length} catch{loggedCatches.length !== 1 ? 'es' : ''} • {speciesStats.length} species
+              </Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.refreshButton} 
+              onPress={handleRefresh}
+              disabled={refreshing}
+            >
+              <Ionicons 
+                name={refreshing ? "refresh" : "refresh-outline"} 
+                size={20} 
+                color={APP_COLORS.primary}
+                style={refreshing ? styles.spinning : undefined}
+              />
+            </TouchableOpacity>
+          </View>
           {loggedCatches.length > 0 && (
             <TouchableOpacity style={styles.clearButton} onPress={clearAllCatches}>
               <Ionicons name="trash-outline" size={16} color="#ff4444" />
@@ -496,6 +525,15 @@ const styles = StyleSheet.create({
     padding: 24,
     marginBottom: 16,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  headerContent: {
+    flex: 1,
+  },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -505,7 +543,15 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     color: APP_COLORS.textSecondary,
-    marginBottom: 12,
+  },
+  refreshButton: {
+    padding: 8,
+    backgroundColor: APP_COLORS.primary + '20',
+    borderRadius: 20,
+    marginLeft: 12,
+  },
+  spinning: {
+    transform: [{ rotate: '360deg' }],
   },
   clearButton: {
     flexDirection: 'row',
