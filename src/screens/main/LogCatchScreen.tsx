@@ -21,7 +21,7 @@ import { APP_COLORS } from '../../constants/config';
 
 export default function LogCatchScreen() {
   const [species, setSpecies] = useState<FishSpecies[]>([]);
-  const [selectedSpecies, setSelectedSpecies] = useState<FishSpecies | null>(null);
+  const [speciesName, setSpeciesName] = useState<string>('');
   const [photo, setPhoto] = useState<string | null>(null);
   const [weight, setWeight] = useState('');
   const [length, setLength] = useState('');
@@ -31,7 +31,6 @@ export default function LogCatchScreen() {
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [privacy, setPrivacy] = useState<'public' | 'friends' | 'private'>('public');
   const [loading, setLoading] = useState(false);
-  const [showSpeciesPicker, setShowSpeciesPicker] = useState(false);
   const { user } = useAuth();
   const { getUnitLabel, convertWeight, convertLength } = useUnits();
   const { isOnline, pendingSyncCount } = useNetwork();
@@ -144,8 +143,8 @@ export default function LogCatchScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedSpecies) {
-      Alert.alert('Error', 'Please select a fish species');
+    if (!speciesName.trim()) {
+      Alert.alert('Error', 'Please enter a fish species');
       return;
     }
 
@@ -181,7 +180,7 @@ export default function LogCatchScreen() {
         // Online: Save directly to database
         const catchData = {
           user_id: user.id,
-          species_id: selectedSpecies.id,
+          species: speciesName.trim(),
           photo_url: photoUrls[0] || null,
           weight: dbWeight,
           length: dbLength,
@@ -206,7 +205,7 @@ export default function LogCatchScreen() {
       } else {
         // Offline: Save to local storage
         const offlineCatch = {
-          species: selectedSpecies.name,
+          species: speciesName.trim(),
           weight: dbWeight || 0,
           length: dbLength || 0,
           location: {
@@ -240,7 +239,7 @@ export default function LogCatchScreen() {
   };
 
   const resetForm = () => {
-    setSelectedSpecies(null);
+    setSpeciesName('');
     setPhoto(null);
     setWeight('');
     setLength('');
@@ -286,42 +285,13 @@ export default function LogCatchScreen() {
       {/* Species Selection */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Fish Species *</Text>
-        <TouchableOpacity
-          style={styles.speciesSelector}
-          onPress={() => setShowSpeciesPicker(!showSpeciesPicker)}
-        >
-          <Text style={[
-            styles.speciesText,
-            !selectedSpecies && styles.placeholderText
-          ]}>
-            {selectedSpecies ? selectedSpecies.name : 'Select a fish species'}
-          </Text>
-          <Ionicons 
-            name={showSpeciesPicker ? 'chevron-up' : 'chevron-down'} 
-            size={20} 
-            color={APP_COLORS.primary} 
-          />
-        </TouchableOpacity>
-
-        {showSpeciesPicker && (
-          <View style={styles.speciesPicker}>
-            <ScrollView style={styles.speciesList} nestedScrollEnabled>
-              {species.map((fish) => (
-                <TouchableOpacity
-                  key={fish.id}
-                  style={styles.speciesOption}
-                  onPress={() => {
-                    setSelectedSpecies(fish);
-                    setShowSpeciesPicker(false);
-                  }}
-                >
-                  <Text style={styles.speciesOptionText}>{fish.name}</Text>
-                  <Text style={styles.speciesOptionScientific}>{fish.scientific_name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
+        <TextInput
+          style={styles.textInput}
+          placeholder="Enter fish species (e.g., Bass, Trout, Salmon)"
+          value={speciesName}
+          onChangeText={setSpeciesName}
+          autoCapitalize="words"
+        />
       </View>
 
       {/* Photo */}

@@ -45,6 +45,97 @@ export interface SocialStats {
 }
 
 export class SocialService {
+  // Mock data for development
+  static getMockSocialFeed(): SocialFeedItem[] {
+    return [
+      {
+        id: '1',
+        type: 'catch',
+        user: {
+          id: 'user1',
+          username: 'fisherman_joe',
+          display_name: 'Joe Fisherman',
+          profile_pic: null,
+          bio: 'Passionate angler from the coast',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+          email: 'joe@example.com',
+          full_name: 'Joe Fisherman'
+        },
+        content: {
+          species: 'Bass',
+          weight: 3.2,
+          length: 18.5,
+          location: 'Lake Superior',
+          date: '2024-01-15',
+          photo_url: null,
+          bait_used: 'Live minnows',
+          notes: 'Great day on the water!'
+        },
+        created_at: '2024-01-15T10:30:00Z',
+        likes_count: 12,
+        comments_count: 3,
+        is_liked: false,
+        is_following: true
+      },
+      {
+        id: '2',
+        type: 'catch',
+        user: {
+          id: 'user2',
+          username: 'trout_master',
+          display_name: 'Trout Master',
+          profile_pic: null,
+          bio: 'Trout fishing specialist',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+          email: 'trout@example.com',
+          full_name: 'Trout Master'
+        },
+        content: {
+          species: 'Rainbow Trout',
+          weight: 2.8,
+          length: 16.2,
+          location: 'Mountain Stream',
+          date: '2024-01-14',
+          photo_url: null,
+          bait_used: 'Fly fishing',
+          notes: 'Beautiful catch in the early morning'
+        },
+        created_at: '2024-01-14T06:45:00Z',
+        likes_count: 8,
+        comments_count: 1,
+        is_liked: true,
+        is_following: false
+      },
+      {
+        id: '3',
+        type: 'tip',
+        user: {
+          id: 'user3',
+          username: 'fishing_guru',
+          display_name: 'Fishing Guru',
+          profile_pic: null,
+          bio: 'Sharing fishing tips and tricks',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+          email: 'guru@example.com',
+          full_name: 'Fishing Guru'
+        },
+        content: {
+          title: 'Best Time to Fish',
+          description: 'Early morning and late evening are the best times for bass fishing. The water is cooler and fish are more active.',
+          category: 'fishing_tips'
+        },
+        created_at: '2024-01-13T14:20:00Z',
+        likes_count: 25,
+        comments_count: 7,
+        is_liked: false,
+        is_following: true
+      }
+    ];
+  }
+
   // Friends/Following Management
   static async followUser(userId: string, targetUserId: string): Promise<void> {
     try {

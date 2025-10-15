@@ -9,11 +9,13 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { WeatherService, WeatherData, FishingConditions } from '../../services/weatherService';
 import { APP_COLORS, FISHING_CONDITIONS } from '../../constants/config';
 
 export default function HomeScreen() {
+  const navigation = useNavigation();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [fishingConditions, setFishingConditions] = useState<FishingConditions | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -168,24 +170,36 @@ export default function HomeScreen() {
       <View style={styles.actionsCard}>
         <Text style={styles.cardTitle}>Quick Actions</Text>
         <View style={styles.actionsGrid}>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('LogCatch' as never)}
+          >
             <Ionicons name="add-circle" size={32} color={APP_COLORS.primary} />
             <Text style={styles.actionText}>Log Catch</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('TrophyRoom' as never)}
+          >
             <Ionicons name="trophy" size={32} color={APP_COLORS.primary} />
             <Text style={styles.actionText}>Trophy Room</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('Social' as never)}
+          >
             <Ionicons name="people" size={32} color={APP_COLORS.primary} />
             <Text style={styles.actionText}>Social Feed</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="location" size={32} color={APP_COLORS.primary} />
-            <Text style={styles.actionText}>Find Spots</Text>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('Analytics' as never)}
+          >
+            <Ionicons name="analytics" size={32} color={APP_COLORS.primary} />
+            <Text style={styles.actionText}>Analytics</Text>
           </TouchableOpacity>
         </View>
       </View>
