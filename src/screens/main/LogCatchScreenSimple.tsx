@@ -9,9 +9,11 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { APP_COLORS } from '../../constants/config';
 
 export default function LogCatchScreenSimple() {
+  const navigation = useNavigation();
   const [speciesName, setSpeciesName] = useState<string>('');
   const [weight, setWeight] = useState('');
   const [length, setLength] = useState('');
@@ -58,9 +60,33 @@ export default function LogCatchScreenSimple() {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      Alert.alert('Success', 'Catch logged successfully!', [
-        { text: 'OK', onPress: () => resetForm() }
-      ]);
+      // Show success notification with more details
+      const catchDetails = [];
+      if (newCatch.weight) catchDetails.push(`${newCatch.weight} lbs`);
+      if (newCatch.length) catchDetails.push(`${newCatch.length} inches`);
+      if (newCatch.bait) catchDetails.push(`using ${newCatch.bait}`);
+      
+      const detailsText = catchDetails.length > 0 ? `\n\n${catchDetails.join(' • ')}` : '';
+      
+      Alert.alert(
+        '🎣 Catch Logged!', 
+        `Great catch! Your ${newCatch.species} has been added to your Trophy Room.${detailsText}`,
+        [
+          { 
+            text: 'Log Another', 
+            onPress: () => resetForm(),
+            style: 'default'
+          },
+          { 
+            text: 'View Trophy Room', 
+            onPress: () => {
+              resetForm();
+              navigation.navigate('TrophyRoom' as never);
+            },
+            style: 'default'
+          }
+        ]
+      );
     } catch (error) {
       Alert.alert('Error', 'Failed to log catch');
     } finally {
