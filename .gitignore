@@ -6,7 +6,7 @@ yarn-error.log*
 
 # Expo
 .expo/
-dist/
+# dist/  # Commented out to allow Vercel deployment
 web-build/
 
 # Native
